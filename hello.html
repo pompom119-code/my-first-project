@@ -3,27 +3,404 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Hello Antigravity</title>
+    <meta name="theme-color" content="#07080c" />
+    <title>Hello Antigravity — Scroll Experience</title>
     <style>
-      body {
-        margin: 0;
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
-        font-family: system-ui, sans-serif;
-        background: #f4f7ff;
-        color: #172554;
+      :root {
+        --ink: #f5f3ed;
+        --muted: #a6a5ad;
+        --line: rgba(255, 255, 255, 0.14);
+        --acid: #d7ff64;
+        --violet: #9b7cff;
+        --bg: #07080c;
+        --progress: 0%;
       }
 
-      main { text-align: center; }
-      h1 { margin: 0; font-size: clamp(3rem, 10vw, 8rem); }
-      p { font-size: clamp(1.25rem, 3vw, 2rem); }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        background: var(--bg);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        overflow-x: hidden;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -2;
+        pointer-events: none;
+        background:
+          radial-gradient(circle at calc(15% + var(--mx, 0px)) calc(15% + var(--my, 0px)), rgba(155, 124, 255, 0.19), transparent 26rem),
+          radial-gradient(circle at 85% 74%, rgba(215, 255, 100, 0.09), transparent 25rem),
+          #07080c;
+      }
+
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        pointer-events: none;
+        opacity: 0.18;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E");
+        mix-blend-mode: soft-light;
+      }
+
+      a { color: inherit; text-decoration: none; }
+      .mono { font-family: "SFMono-Regular", Consolas, monospace; letter-spacing: 0.08em; text-transform: uppercase; }
+
+      .progress {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 100;
+        width: var(--progress);
+        height: 3px;
+        background: linear-gradient(90deg, var(--violet), var(--acid));
+      }
+
+      .topbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 50;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.35rem 2rem;
+        mix-blend-mode: difference;
+      }
+
+      .brand { font-size: 0.75rem; font-weight: 700; }
+      .topbar nav { display: flex; gap: 1.4rem; }
+      .topbar nav a { color: #fff; font-size: 0.68rem; opacity: 0.56; transition: opacity 220ms ease; }
+      .topbar nav a:hover, .topbar nav a.active { opacity: 1; }
+
+      .section {
+        position: relative;
+        min-height: 100svh;
+        display: grid;
+        align-items: center;
+        padding: 7rem clamp(1.4rem, 5vw, 5rem) 4rem;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        margin-bottom: 1.5rem;
+        color: var(--acid);
+        font-size: 0.67rem;
+      }
+
+      .eyebrow::before { content: ""; width: 2.7rem; height: 1px; background: currentColor; }
+
+      .hero { overflow: hidden; }
+
+      .hero h1 {
+        max-width: 11ch;
+        margin: 0;
+        font-size: clamp(4.5rem, 14vw, 12.5rem);
+        font-weight: 750;
+        line-height: 0.78;
+        letter-spacing: -0.085em;
+      }
+
+      .hero h1 span { display: block; }
+      .hero h1 .outline { color: transparent; -webkit-text-stroke: 1px rgba(245, 243, 237, 0.75); transform: translateX(7vw); }
+
+      .orb {
+        position: absolute;
+        right: 7vw;
+        top: 23%;
+        width: clamp(8rem, 21vw, 19rem);
+        aspect-ratio: 1;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at 32% 25%, #fff 0 2%, transparent 10%),
+          radial-gradient(circle at 38% 32%, #d5c9ff, #8262ee 36%, #1c132f 70%);
+        box-shadow: 0 0 7rem rgba(155, 124, 255, 0.4);
+        transform: translateY(calc(var(--scroll-y, 0) * 0.11px));
+      }
+
+      .orbit {
+        position: absolute;
+        inset: -18%;
+        border: 1px solid rgba(255,255,255,.25);
+        border-radius: 50%;
+        transform: rotate(-26deg);
+      }
+
+      .orbit::after {
+        content: "";
+        position: absolute;
+        left: 10%;
+        top: 18%;
+        width: 0.7rem;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        background: var(--acid);
+        box-shadow: 0 0 1.5rem var(--acid);
+      }
+
+      .hero-meta {
+        position: absolute;
+        right: clamp(1.4rem, 5vw, 5rem);
+        bottom: 3.5rem;
+        display: grid;
+        grid-template-columns: auto auto;
+        gap: 0.35rem 2.5rem;
+        color: var(--muted);
+        font-size: 0.66rem;
+      }
+
+      .hero-meta strong { color: var(--ink); font-weight: 500; }
+
+      .scroll-cue {
+        position: absolute;
+        left: clamp(1.4rem, 5vw, 5rem);
+        bottom: 3rem;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        font-size: 0.64rem;
+        color: var(--muted);
+      }
+
+      .scroll-cue i { display: block; width: 3.5rem; height: 1px; background: var(--muted); animation: breathe 1.6s ease-in-out infinite; }
+
+      .statement { background: #efeee8; color: #111217; }
+      .statement .eyebrow { color: #6c4dff; }
+      .statement-grid { display: grid; grid-template-columns: minmax(9rem, .6fr) 2.2fr; gap: 8vw; align-items: start; }
+      .section-no { color: #737279; font-size: 0.7rem; }
+
+      .statement h2 {
+        max-width: 16ch;
+        margin: 0;
+        font-size: clamp(2.8rem, 7vw, 7.2rem);
+        line-height: 0.96;
+        letter-spacing: -0.055em;
+      }
+
+      .statement h2 em { color: #6c4dff; font-family: Georgia, serif; font-weight: 400; }
+
+      .statement p {
+        max-width: 38rem;
+        margin: 3rem 0 0 auto;
+        color: #5f5e65;
+        font-size: clamp(1rem, 1.5vw, 1.3rem);
+        line-height: 1.8;
+      }
+
+      .field { overflow: hidden; }
+      .field-copy { position: relative; z-index: 2; max-width: 42rem; }
+
+      .field h2 {
+        margin: 0;
+        font-size: clamp(3rem, 8vw, 8.5rem);
+        line-height: 0.9;
+        letter-spacing: -0.07em;
+      }
+
+      .field h2 span { color: var(--acid); }
+      .field p { max-width: 33rem; color: var(--muted); font-size: 1.05rem; line-height: 1.8; }
+
+      .rings {
+        position: absolute;
+        right: -14vw;
+        top: 50%;
+        width: min(72vw, 56rem);
+        aspect-ratio: 1;
+        transform: translateY(-50%) rotate(calc(var(--scroll-y, 0) * 0.025deg));
+      }
+
+      .rings span { position: absolute; inset: var(--inset); border: 1px solid rgba(215, 255, 100, var(--alpha)); border-radius: 50%; }
+
+      .chapters { align-items: stretch; padding-top: 10rem; }
+      .chapter-list { display: grid; align-content: center; }
+
+      .chapter {
+        display: grid;
+        grid-template-columns: 5rem 1fr auto;
+        gap: 2rem;
+        align-items: center;
+        padding: 2rem 0;
+        border-top: 1px solid var(--line);
+        transition: padding 300ms ease, color 300ms ease;
+      }
+
+      .chapter:last-child { border-bottom: 1px solid var(--line); }
+      .chapter:hover { padding-left: 1rem; color: var(--acid); }
+      .chapter small { color: var(--muted); }
+      .chapter h3 { margin: 0; font-size: clamp(2rem, 4.5vw, 4.6rem); font-weight: 500; letter-spacing: -0.05em; }
+      .chapter b { font-size: 1.4rem; font-weight: 400; }
+
+      .finale { text-align: center; overflow: hidden; }
+      .finale::before { content: ""; position: absolute; width: 44rem; height: 44rem; top: 50%; left: 50%; transform: translate(-50%, -50%); border-radius: 50%; background: rgba(155,124,255,.16); filter: blur(4rem); }
+
+      .finale-inner { position: relative; z-index: 2; }
+
+      .date {
+        display: inline-block;
+        margin: 0 0 1.8rem;
+        padding: 0.65rem 1rem;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        color: var(--acid);
+        font-size: 0.7rem;
+      }
+
+      .finale h2 { margin: 0; font-size: clamp(4rem, 12vw, 11rem); line-height: 0.83; letter-spacing: -0.08em; }
+      .finale p { margin: 2rem auto 0; color: var(--muted); }
+
+      .reveal { opacity: 0; transform: translateY(3rem); transition: opacity 900ms cubic-bezier(.2,.7,.2,1), transform 900ms cubic-bezier(.2,.7,.2,1); }
+      .reveal.visible { opacity: 1; transform: none; }
+
+      @keyframes breathe { 50% { transform: scaleX(.45); transform-origin: left; opacity: .45; } }
+
+      @media (max-width: 720px) {
+        .topbar { padding: 1.1rem 1.3rem; }
+        .topbar nav a:not(:last-child) { display: none; }
+        .section { padding-inline: 1.3rem; }
+        .hero h1 { font-size: clamp(4rem, 23vw, 7rem); }
+        .hero h1 .outline { transform: translateX(0); }
+        .orb { top: 18%; right: -12%; opacity: .75; }
+        .hero-meta { right: 1.3rem; bottom: 5rem; grid-template-columns: 1fr; text-align: right; }
+        .hero-meta span { display: none; }
+        .statement-grid { grid-template-columns: 1fr; gap: 3rem; }
+        .statement p { margin-left: 0; }
+        .rings { width: 110vw; right: -58vw; opacity: .55; }
+        .chapter { grid-template-columns: 2.5rem 1fr auto; gap: 1rem; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+      }
     </style>
   </head>
   <body>
+    <div class="progress" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <a class="brand mono" href="#hello">AG / 2026</a>
+      <nav class="mono" aria-label="章節導覽">
+        <a href="#hello">開始</a>
+        <a href="#idea">宣言</a>
+        <a href="#field">場域</a>
+        <a href="#today">今天</a>
+      </nav>
+    </header>
+
     <main>
-      <h1>Hello Antigravity</h1>
-      <p>今天是 2026 年 11 月 7 日</p>
+      <section class="section hero" id="hello" data-section>
+        <div>
+          <p class="eyebrow mono reveal">An experimental scroll / 001</p>
+          <h1 class="reveal"><span>Hello</span><span class="outline">Anti—</span><span>gravity</span></h1>
+        </div>
+
+        <div class="orb" aria-hidden="true"><div class="orbit"></div></div>
+
+        <div class="hero-meta mono">
+          <span>Location</span><strong>Taipei, TW</strong>
+          <span>Date</span><strong>07.11.2026</strong>
+        </div>
+
+        <a class="scroll-cue mono" href="#idea"><i></i>Scroll to enter</a>
+      </section>
+
+      <section class="section statement" id="idea" data-section>
+        <div class="statement-grid">
+          <div>
+            <p class="eyebrow mono reveal">Manifesto</p>
+            <span class="section-no mono">02 / 05</span>
+          </div>
+          <div>
+            <h2 class="reveal">當重力失去權威，<em>想像</em>便開始接管方向。</h2>
+            <p class="reveal">這不是一個抵達終點的頁面，而是一段向下航行的介面。每次滑動，都讓畫面脫離一點日常軌道。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section field" id="field" data-section>
+        <div class="field-copy">
+          <p class="eyebrow mono reveal">The field / 03</p>
+          <h2 class="reveal">FLOAT<br><span>BEYOND</span><br>THE KNOWN.</h2>
+          <p class="reveal">把熟悉的秩序放輕，把未知的訊號放大。設計不只是裝飾，而是一股改變閱讀速度與情緒的力場。</p>
+        </div>
+        <div class="rings" aria-hidden="true">
+          <span style="--inset:0%;--alpha:.18"></span>
+          <span style="--inset:10%;--alpha:.24"></span>
+          <span style="--inset:20%;--alpha:.32"></span>
+          <span style="--inset:30%;--alpha:.45"></span>
+          <span style="--inset:40%;--alpha:.7"></span>
+        </div>
+      </section>
+
+      <section class="section chapters" id="chapters" data-section>
+        <div>
+          <p class="eyebrow mono reveal">Coordinates / 04</p>
+          <div class="chapter-list reveal">
+            <div class="chapter"><small class="mono">01</small><h3>失重的字體</h3><b>↗</b></div>
+            <div class="chapter"><small class="mono">02</small><h3>流動的空間</h3><b>↗</b></div>
+            <div class="chapter"><small class="mono">03</small><h3>安靜的訊號</h3><b>↗</b></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section finale" id="today" data-section>
+        <div class="finale-inner reveal">
+          <p class="date mono">今天是 2026 年 11 月 7 日</p>
+          <h2>STAY<br>CURIOUS.</h2>
+          <p>Keep scrolling. Keep wondering. Keep floating.</p>
+        </div>
+      </section>
     </main>
+
+    <script>
+      const root = document.documentElement;
+      const links = [...document.querySelectorAll('nav a')];
+      const sections = [...document.querySelectorAll('[data-section]')];
+
+      const updateScroll = () => {
+        const max = document.documentElement.scrollHeight - innerHeight;
+        root.style.setProperty('--progress', `${max ? (scrollY / max) * 100 : 0}%`);
+        root.style.setProperty('--scroll-y', scrollY.toFixed(1));
+      };
+
+      addEventListener('scroll', updateScroll, { passive: true });
+      updateScroll();
+
+      addEventListener('pointermove', (event) => {
+        root.style.setProperty('--mx', `${(event.clientX / innerWidth - .5) * 22}px`);
+        root.style.setProperty('--my', `${(event.clientY / innerHeight - .5) * 22}px`);
+      }, { passive: true });
+
+      const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) entry.target.classList.add('visible');
+        });
+      }, { threshold: 0.18 });
+
+      document.querySelectorAll('.reveal').forEach((item, index) => {
+        item.style.transitionDelay = `${(index % 3) * 90}ms`;
+        revealObserver.observe(item);
+      });
+
+      const sectionObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          links.forEach((link) => link.classList.toggle('active', link.hash === `#${entry.target.id}`));
+        });
+      }, { rootMargin: '-42% 0px -52%', threshold: 0 });
+
+      sections.forEach((section) => sectionObserver.observe(section));
+    </script>
   </body>
 </html>
